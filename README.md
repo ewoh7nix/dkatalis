@@ -3,9 +3,11 @@
 - Debian >= 11
 
 ## HOWTO
-
-As we run the Elasticsearch service on AWS EC2 instance, you may need to adjust some variables on 
-`inventory/group_vars` directory based on your setup on AWS. 
+This is the Ansible playbook to provision and deploy elasticsearch service into AWS EC2 instances.
+The playbook is using AWS dynamic inventory, so that reduce maintaining static inventory due to frequent changes
+on AWS resources, like ip address, instances, etc. You will need an AWS Keys stored in ~/.aws/credentials or 
+environment variable to use this playbook. And as we run the Elasticsearch service on AWS EC2 instance, you may
+need to adjust some variables on `inventory/group_vars` directory based on your setup on AWS. 
 
 ### Run the Ansible playbook
 Provision EC2 instance:
@@ -85,6 +87,7 @@ $ sudo curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic:$ELASTIC_PA
   },
  ---------omitted-------
 ```
+
 
 ### Question
 
