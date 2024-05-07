@@ -1,0 +1,9 @@
+instance_name: "es-master-node"
+key_pair_name: "dkatalis"
+vpc_subnet_id: "subnet-0d5d7f223dd5ae0df"
+instance_type: "t2.micro"
+security_group: "sg-063f828d4a916620d"
+network:
+  assign_public_ip: true
+image_id: "ami-0588c11374527e516"
+

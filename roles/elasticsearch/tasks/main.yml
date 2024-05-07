@@ -1,0 +1,71 @@
+- name: Install Java package and depedencies
+  ansible.builtin.apt:
+    pkg:
+      - default-jre
+      - apt-transport-https
+    update_cache: yes
+    state: present
+  tags: elasticsearch
+
+- name: Get GPG Key Elasticsearch
+  get_url:
+    url: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+    dest: /etc/apt/trusted.gpg.d/elasticsearch.asc
+    mode: 0644
+    force: true
+  tags: elasticsearch
+
+- name: Add elasticsearch repository
+  ansible.builtin.apt_repository:
+    filename: elasticsearch.list
+    repo: 'deb [signed-by=/etc/apt/trusted.gpg.d/elasticsearch.asc] https://artifacts.elastic.co/packages/8.x/apt stable main'
+  tags: elasticsearch 
+
+- name: Install elasticsearch package
+  ansible.builtin.apt:
+    name: elasticsearch
+    update_cache: yes
+    state: present
+  tags: elasticsearch
+
+- name: Configure elasticsearch
+  ansible.builtin.template:
+    src: elasticsearch.yml.j2
+    dest: /etc/elasticsearch/elasticsearch.yml
+    mode: 0644
+    owner: root
+    group: elasticsearch
+  tags: elasticsearch
+
+- name: Run elasticsearch service
+  ansible.builtin.systemd:
+    name: elasticsearch
+    daemon_reload: yes
+    enabled: true
+    state: restarted
+  tags: elasticsearch
+
+- name: Resetting elastic password
+  ansible.builtin.command: /usr/share/elasticsearch/bin/elasticsearch-reset-password -b -u elastic --url https://localhost:9200
+  register: es_password
+  tags: elasticsearch
+
+- name: Store sanitized password into variable
+  ansible.builtin.set_fact:
+    # es_password.stdout: Password for the [elastic] user successfully reset.\nNew value: xxxxxxxxxxx
+    password: "{{ es_password.stdout.split('\n')[1].split(':')[1] | trim }}"
+  tags: elasticsearch
+
+- name: Reset elastic password
+  ansible.builtin.uri:
+    url: "https://localhost:9200/_security/user/elastic/_password?pretty"
+    user: elastic
+    password: "{{ password }}"
+    ca_path: /etc/elasticsearch/certs/http_ca.crt
+    method: POST
+    headers:
+      Content-Type: application/json
+    body: '{ "password" : "{{ elastic_password }}" }'
+    body_format: json
+  tags: elasticsearch
+
